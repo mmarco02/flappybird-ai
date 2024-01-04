@@ -6,7 +6,6 @@ This repository contains a custom Gym environment for training reinforcement lea
 Before using this environment, ensure you have the required dependencies installed. You can install them using the following:
 
 ```bash
-Copy code
 pip install gym
 pip install numpy
 ```
@@ -16,18 +15,15 @@ To use this environment in your reinforcement learning project, you can follow t
 
 #### Import the environment:
 ```python
-Copy code
 from flappybird_environment import FlappyBirdEnvironment
 ```
 #### Create an instance of the environment:
 ```python
-Copy code
 env = FlappyBirdEnvironment()
 ```
 
 Interact with the environment using the standard Gym interface (reset, step, etc.):
 ```python
-Copy code
 observation, reward, done, info = env.step(action)
 ```
 
@@ -52,14 +48,12 @@ The action space is discrete with two possible actions:
 The agent receives a reward based on the game's score and the distance traveled by the bird. The reward calculation is as follows:
 
 ```python
-Copy code
 reward = self._flappy_bird_game.score + (self._flappy_bird_game.distance / 100)
 ```
 Additionally, if the game ends, a penalty of -10 is applied.
 
 ### Example
 ```python
-Copy code
 env = FlappyBirdEnvironment()
 
 # Reset the environment to start a new episode
