@@ -8,6 +8,7 @@ Before using this environment, ensure you have the required dependencies install
 ```bash
 pip install gym
 pip install numpy
+pip install tensorflow
 ```
 
 Usage:
