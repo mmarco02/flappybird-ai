@@ -1,5 +1,5 @@
 # Flappy Bird Reinforcement Learning Environment
-This repository contains a custom Gym environment for training reinforcement learning agents on the Flappy Bird game. The environment is implemented using OpenAI Gym's gym.Env base class and integrates the Flappy Bird game through the flappybird module.
+This repository contains a custom Gym environment for training reinforcement learning agents on the Flappy Bird game. The environment is implemented using OpenAI Gym's gym.Env base class and integrates the Flappy Bird game.
 
 ## FlappyBirdEnvironment
 ### Installation
