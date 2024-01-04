@@ -1,4 +1,3 @@
-# Import Required Libraries
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -24,26 +23,28 @@ class DQN(tf.keras.Model):
 
 # CartPole has 2 possible actions: push left or push right
 num_actions = 2
-#if trained dqn model exists, load it
-if tf.io.gfile.exists("dqn_flappy_bird.keras"):
-    dqn_agent = DQN(num_actions)
-    dqn_agent.load_weights("dqn_flappy_bird.keras")
-    print("Trained model loaded")
-else:
-    dqn_agent = DQN(num_actions)
-    print("New model created")
+
+dqn_agent = DQN(num_actions)
 
 # Define the DQN Algorithm Parameters
 learning_rate = 0.001
 discount_factor = 0.99
 # Initial exploration probability
-exploration_prob = 1.0
+exploration_prob = 0.5
 # Decay rate of exploration probability
 exploration_decay = 0.995
 # Minimum exploration probability
 min_exploration_prob = 0.1
 
 log_interval = 50
+
+# Initialize lists to store metrics
+eval_rewards = []
+learning_rate_values = []
+sample_q_values = []
+exploration_probs = []
+loss_values = []
+target_q = []
 
 # Register the environment
 gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
@@ -57,7 +58,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 # Training the DQN
 num_episodes = 50
-max_steps_per_episode = 500
+max_steps_per_episode = 1000
 
 
 for episode in range(num_episodes):
@@ -66,9 +67,12 @@ for episode in range(num_episodes):
 
     for step in range(max_steps_per_episode):
         # Choose action using epsilon-greedy policy
-        if np.random.Generator(np.random.PCG64()).uniform(0, 1) < exploration_prob:
+        rand = np.random.Generator(np.random.PCG64()).uniform(0.1, 1)
+        if rand < exploration_prob:
+            #print(f"Exploring because {rand} < {exploration_prob}")
             action = env.action_space.sample()
         else:
+            #print(f"Not exploring, step {step}")
             if isinstance(obs, tuple):
                 action = np.argmax(dqn_agent(obs[0][np.newaxis, :]))
             else:
@@ -95,6 +99,14 @@ for episode in range(num_episodes):
         obs = obs
         episode_reward += reward
 
+        eval_rewards.append(episode_reward)
+        loss_values.append(loss.numpy())
+        learning_rate_values.append(learning_rate)
+        sample_q_values.append(current_q_values.numpy())
+        target_q.append(target_q_values)
+
+        exploration_probs.append(exploration_prob)
+
         if terminated:
             print(f"Episode {episode + 1}: Reward = {episode_reward}")
             env.reset()
@@ -105,9 +117,16 @@ for episode in range(num_episodes):
     if (episode + 1) % 100 == 0:
         print(f"Episode {episode + 1}: Reward = {episode_reward}")
 
+# Save metrics to numpy files
+np.save("saved/eval_rewards.npy", np.array(eval_rewards))
+np.save("saved/learning_rate_values.npy", np.array(learning_rate_values))
+np.save("saved/sample_q_values.npy", np.array(sample_q_values))
+np.save("saved/exploration_probs.npy", np.array(exploration_probs))
+np.save("saved/loss_values.npy", np.array(loss_values))
+np.save("saved/target_q.npy", np.array(target_q))
 
 # Evaluating the Trained DQN
-num_eval_episodes = 10
+num_eval_episodes = 30
 
 print(f"Training finished. Evaluating the trained DQN for {num_eval_episodes} episodes.")
 
@@ -137,14 +156,18 @@ for _ in range(num_eval_episodes):
 average_eval_reward = np.mean(eval_rewards)
 print(f"Average Evaluation Reward: {average_eval_reward}")
 
-# plot the rewards and iterations
-plt.plot(range(num_eval_episodes), eval_rewards)
+# plot the rewards over episodes
+plt.figure(figsize=(10, 6))
+plt.plot(range(len(eval_rewards)), eval_rewards, label='Evaluation Reward')
 plt.xlabel("Episode")
-plt.ylabel("Evaluation Reward")
+plt.ylabel("Reward")
+plt.title("Evaluation Rewards Over Episodes")
+plt.legend()
 plt.show()
 
+
 # Save the Trained DQN
-dqn_agent.save_weights("dqn_flappy_bird.keras")
+dqn_agent.save_weights("saved/dqn_flappy_bird.keras")
 
 
 

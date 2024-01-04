@@ -3,7 +3,6 @@ from typing import Optional, Union, List
 import gym
 from gym import spaces
 import numpy as np
-from gym.core import RenderFrame
 
 from flappybird import FlappyBird
 
