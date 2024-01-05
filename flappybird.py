@@ -175,8 +175,8 @@ class FlappyBird:
             ):
                 return True
 
-        if self.bird_y + self.bird_size > self.screen_height or self.bird_y < 0:
-            return True
+        #if self.bird_y + self.bird_size > self.screen_height or self.bird_y < 0:
+        #    return True
 
         return False
 

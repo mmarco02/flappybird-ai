@@ -57,8 +57,8 @@ loss_fn = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 # Training the DQN
-num_episodes = 1500
-max_steps_per_episode = 1000
+num_episodes = 5000
+max_steps_per_episode = 1500
 
 
 for episode in range(num_episodes):
@@ -153,7 +153,7 @@ for _ in range(num_eval_episodes):
 average_eval_reward = np.mean(eval_rewards)
 print(f"Average Evaluation Reward: {average_eval_reward}")
 
-# plot the rewards over num iterations
+# plot the rewards over num eval episodes
 plt.figure(figsize=(10, 6))
 plt.plot(range(len(eval_rewards)), eval_rewards, label='Evaluation Reward')
 plt.xlabel("Episode")
