@@ -6,10 +6,10 @@ from flappybird import FlappyBird
 gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
 
 # Create an instance using gym.make
-flappy_env = gym.make('FlappyBird-m', fbgame=FlappyBird())
+flappy_env = gym.make('FlappyBird-m')
 
 # Use the environment as usual
-initial_observation = flappy_env.reset()
+initial_observation, _ = flappy_env.reset()
 print("Initial Observation:", initial_observation)
 
 # Perform some steps in the environment

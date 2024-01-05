@@ -24,6 +24,9 @@ class FlappyBirdEnvironment(gym.Env):
         return self._state, {}
 
     def step(self, action):
+        if self._episode_ended:
+            return self.reset()
+
         self._flappy_bird_game.render()
 
         observation = self._get_observation()

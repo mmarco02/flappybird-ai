@@ -57,7 +57,7 @@ loss_fn = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 # Training the DQN
-num_episodes = 50
+num_episodes = 1500
 max_steps_per_episode = 1000
 
 
@@ -109,7 +109,6 @@ for episode in range(num_episodes):
 
         if terminated:
             print(f"Episode {episode + 1}: Reward = {episode_reward}")
-            env.reset()
             break
 
     # Decay exploration probability
@@ -126,7 +125,7 @@ np.save("saved/loss_values.npy", np.array(loss_values))
 np.save("saved/target_q.npy", np.array(target_q))
 
 # Evaluating the Trained DQN
-num_eval_episodes = 30
+num_eval_episodes = 100
 
 print(f"Training finished. Evaluating the trained DQN for {num_eval_episodes} episodes.")
 
@@ -144,10 +143,8 @@ for _ in range(num_eval_episodes):
 
         obs, reward, terminated, info = env.step(action)
         eval_reward += reward
-        obs = obs
 
         if terminated:
-            env.reset()
             print(f"Evaluation Reward = {eval_reward}")
             break
 
@@ -156,7 +153,7 @@ for _ in range(num_eval_episodes):
 average_eval_reward = np.mean(eval_rewards)
 print(f"Average Evaluation Reward: {average_eval_reward}")
 
-# plot the rewards over episodes
+# plot the rewards over num iterations
 plt.figure(figsize=(10, 6))
 plt.plot(range(len(eval_rewards)), eval_rewards, label='Evaluation Reward')
 plt.xlabel("Episode")
