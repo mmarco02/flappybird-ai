@@ -16,11 +16,16 @@ To use this environment in your reinforcement learning project, you can follow t
 
 #### Import the environment:
 ```python
-from flappybird_environment import FlappyBirdEnvironment
+from flappy_bird_gym.envs.flappy_bird_env import FlappyBirdEnvironment
+import gym
 ```
 #### Create an instance of the environment:
 ```python
-env = FlappyBirdEnvironment()
+# Register the environment
+gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
+
+# Create an instance using gym.make
+flappy_env = gym.make('FlappyBird-m')
 ```
 
 Interact with the environment using the standard Gym interface (reset, step, etc.):
@@ -55,19 +60,33 @@ Additionally, if the game ends, a penalty of -10 is applied.
 
 ### Example
 ```python
-env = FlappyBirdEnvironment()
+import gym
+from flappy_bird_gym.envs.flappy_bird_env import FlappyBirdEnvironment
+from flappybird import FlappyBird
 
-# Reset the environment to start a new episode
-observation, _ = env.reset()
+# Register the environment
+gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
 
-for _ in range(1000):
-    # Take a random action
-    action = env.random_action()
+# Create an instance using gym.make
+flappy_env = gym.make('FlappyBird-m')
 
-    # Interact with the environment
-    observation, reward, done, _ = env.step(action)
+# Use the environment as usual
+initial_observation, _ = flappy_env.reset()
+print("Initial Observation:", initial_observation)
+
+# Perform some steps in the environment
+for _ in range(10):
+    action = flappy_env.action_space.sample()
+    observation, reward, done, info = flappy_env.step(action)
+    print("Observation:", observation)
+    print("Reward:", reward)
+    print("Done:", done)
+    print("Info:", info)
 
     if done:
-        print("Episode ended!")
-        break
+        print("Episode ended. Resetting environment.")
+        flappy_env.reset()
+
+# Optionally, close the environment when you're done
+flappy_env.close()
 ```
