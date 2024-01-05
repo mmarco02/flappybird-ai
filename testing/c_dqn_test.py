@@ -25,7 +25,7 @@ from tf_agents.policies import policy_saver
 num_iterations = 15000
 
 initial_collect_steps = 10
-collect_steps_per_iteration = 1
+collect_steps_per_iteration = 10
 replay_buffer_capacity = 100000
 
 fc_layer_params = (100,)
@@ -130,14 +130,12 @@ def collect_step(environment, policy):
     action_step = policy.action(time_step)
     next_time_step = environment.step(action_step.action)
     traj = trajectory.from_transition(time_step, action_step, next_time_step)
-    print("observation: ", time_step.observation)
 
     # Add trajectory to the replay buffer
     replay_buffer.add_batch(traj)
 
 
 for _ in range(initial_collect_steps):
-    print("Observation: ", train_env.current_time_step().observation)
     collect_step(train_env, random_policy)
 
 
@@ -163,13 +161,9 @@ avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
 
 for _ in range(num_iterations):
-    print("Iteration: ", _)
-    print("Observation: ", train_env.current_time_step().observation)
-    print("avg_return: ", returns)
     # Collect a few steps using collect_policy and save to the replay buffer.
     for _ in range(collect_steps_per_iteration):
         collect_step(train_env, agent.collect_policy)
-        print("Observation: ", train_env.current_time_step().observation)
 
     # Sample a batch of data from the buffer and update the agent's network.
     experience, unused_info = next(iterator)
@@ -178,7 +172,7 @@ for _ in range(num_iterations):
     step = agent.train_step_counter.numpy()
 
     if step % log_interval == 0:
-        print('step = {0}: loss = {1}'.format(step, train_loss.loss))
+        print('step = {0}: loss = {1}'.format(step, train_loss))
 
     if step % eval_interval == 0:
         avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)

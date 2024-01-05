@@ -19,7 +19,6 @@ class FlappyBirdEnvironment(tf_py_environment.py_environment.PyEnvironment):
         self._score = 0
         self._distance = 0
         self._episode_ended = False
-        self._should_reset = False
         self._observation = np.full(self._observation_shape, 0, dtype=np.float32)
 
     def action_spec(self):
@@ -29,7 +28,6 @@ class FlappyBirdEnvironment(tf_py_environment.py_environment.PyEnvironment):
         return self._observation_spec
 
     def _reset(self):
-        self._should_reset = False
         self._episode_ended = False
         self._flappy_bird_game.reset()
         self._observation = np.full(self._observation_shape, 0, dtype=np.float32)
@@ -52,22 +50,18 @@ class FlappyBirdEnvironment(tf_py_environment.py_environment.PyEnvironment):
 
         self._flappy_bird_game.render()
 
-
-
         self._score = self._flappy_bird_game.get_score()
         self._distance = self._flappy_bird_game.get_distance()
 
         self._reward = self._score + (self._distance / 100)
 
-        if self._should_reset:
-            self._episode_ended = True
-
         if self._flappy_bird_game.get_collided():
-            self._should_reset = True
+            self._episode_ended = True
             print(f"Episode ended, reward: {self._reward}, score: {self._score}, distance: {self._distance}")
-            return ts.termination(observation=observation, reward=-10.0)
+            return ts.termination(observation=observation, reward=-5.0 + self._score)
 
         return ts.transition(observation=observation, reward=self._reward, discount=1.0)
+
 
     def set_observation(self, observation):
         self._observation = observation
@@ -76,15 +70,15 @@ class FlappyBirdEnvironment(tf_py_environment.py_environment.PyEnvironment):
         bird_y = self._flappy_bird_game.get_bird_y()
         bird_velocity = self._flappy_bird_game.get_bird_velocity()
         distance_to_next_pipe = self._flappy_bird_game.get_distance_to_next_pipe()
-        vertical_distance_to_next_bottom_pipe = self._flappy_bird_game.get_vertical_distance_to_next_bottom_pipe()
         vertical_distance_to_next_top_pipe = self._flappy_bird_game.get_vertical_distance_to_next_top_pipe()
+        vertical_distance_to_next_bottom_pipe = self._flappy_bird_game.get_vertical_distance_to_next_bottom_pipe()
 
         observation = np.array([
             bird_y,
             bird_velocity,
             distance_to_next_pipe,
-            vertical_distance_to_next_bottom_pipe,
             vertical_distance_to_next_top_pipe,
+            vertical_distance_to_next_bottom_pipe
         ], dtype=np.float32)
 
         return observation

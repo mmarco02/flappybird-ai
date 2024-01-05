@@ -53,6 +53,13 @@ class FlappyBird:
         next_pipe = self.pipes[0]
         return next_pipe['height'] - self.bird_y
 
+    def get_distance_to_following_pipe(self):
+        if not self.pipes:
+            return 0
+        next_pipe = self.pipes[1]
+        return next_pipe['x'] - self.bird_x
+
+
     def get_bird_y(self):
         return self.bird_y
 
@@ -115,6 +122,14 @@ class FlappyBird:
             self.game_over = self.check_collision()
 
     def generate_pipes(self):
+        # Check if there are no pipes yet, then add the first pipe before the game loop starts
+        if not self.pipes:
+            pipe_height = random.randint(100, 300)
+            self.pipes.append({
+                'x': self.screen_width,
+                'height': pipe_height,
+            })
+
         self.pipe_timer += 1
         if self.pipe_timer == self.pipe_interval:
             pipe_height = random.randint(100, 300)
@@ -175,8 +190,8 @@ class FlappyBird:
             ):
                 return True
 
-        #if self.bird_y + self.bird_size > self.screen_height or self.bird_y < 0:
-        #    return True
+        if self.bird_y + self.bird_size > self.screen_height or self.bird_y < 0:
+            return True
 
         return False
 
