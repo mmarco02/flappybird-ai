@@ -27,7 +27,7 @@ class FlappyBird:
 
         self.pipe_gap = 150
         self.pipe_speed = 5
-        self.pipe_interval = 45
+        self.pipe_interval = 65
         self.pipe_timer = 0
 
         self.score = 0
@@ -118,6 +118,10 @@ class FlappyBird:
 
             self.generate_pipes()
             self.move_pipes()
+
+            if self.pipes:
+                if self.pipes[0]['x'] + self.pipe_width < self.bird_x:
+                    self.pipes.remove(self.pipes[0])
 
             self.game_over = self.check_collision()
 

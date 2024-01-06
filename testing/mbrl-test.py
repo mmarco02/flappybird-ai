@@ -17,6 +17,7 @@ from tf_env import FlappyBirdEnvironment
 from flappybird import FlappyBird
 import numpy as np
 from tf_agents.policies import policy_saver
+from gym import spaces
 
 # Define constants
 num_iterations = 15000
@@ -37,9 +38,10 @@ class MPCAgent:
         self.environment = environment
         self.observation_spec = environment.observation_spec()
         self.action_spec = environment.action_spec()
+        self.action_space = spaces.Discrete(2)
 
     def plan(self, current_observation):
-        return self.action_spec.sample()
+        return self.action_space.sample()
 
     def step(self, time_step):
         action = self.plan(time_step.observation)

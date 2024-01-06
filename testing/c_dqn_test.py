@@ -5,6 +5,7 @@ from __future__ import print_function
 import matplotlib
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import os
 
 from tf_agents.agents.categorical_dqn import categorical_dqn_agent
 from tf_agents.drivers import dynamic_step_driver
@@ -22,10 +23,10 @@ from flappybird import FlappyBird
 import numpy as np
 from tf_agents.policies import policy_saver
 
-num_iterations = 15000
+num_iterations = 25000
 
-initial_collect_steps = 10
-collect_steps_per_iteration = 10
+initial_collect_steps = 15
+collect_steps_per_iteration = 15
 replay_buffer_capacity = 100000
 
 fc_layer_params = (100,)
@@ -93,7 +94,6 @@ agent = categorical_dqn_agent.CategoricalDqnAgent(
 
 agent.initialize()
 
-
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
     for _ in range(num_episodes):
@@ -160,6 +160,32 @@ agent.train_step_counter.assign(0)
 avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
 
+global_step = tf.compat.v1.train.get_or_create_global_step()
+
+policy_dir = 'saved_policy'
+
+#load the policy
+#saved_policy = tf.compat.v2.saved_model.load(policy_dir)
+
+
+checkpoint_dir = os.path.join(policy_dir, 'checkpoint')
+train_checkpointer = common.Checkpointer(
+    ckpt_dir=checkpoint_dir,
+    max_to_keep=2,
+    agent=agent,
+    policy=agent.policy,
+    replay_buffer=replay_buffer,
+    global_step=global_step
+)
+
+train_checkpointer.initialize_or_restore()
+global_step = tf.compat.v1.train.get_global_step()
+
+print(f"Checkpoint restored from {checkpoint_dir}")
+
+print(f"Policy: {agent.policy.variables()}")
+
+
 for _ in range(num_iterations):
     # Collect a few steps using collect_policy and save to the replay buffer.
     for _ in range(collect_steps_per_iteration):
@@ -173,6 +199,9 @@ for _ in range(num_iterations):
 
     if step % log_interval == 0:
         print('step = {0}: loss = {1}'.format(step, train_loss))
+        train_checkpointer.save(global_step)
+        print(f"Checkpoint saved to {checkpoint_dir}")
+
 
     if step % eval_interval == 0:
         avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
@@ -185,7 +214,5 @@ plt.ylabel('Average Return')
 plt.xlabel('Step')
 plt.ylim(top=550)
 
-# save the policy
-policy_dir = 'saved_policy'
-tf_policy_saver = policy_saver.PolicySaver(agent.policy)
-tf_policy_saver.save(policy_dir)
+
+train_checkpointer.save(global_step)

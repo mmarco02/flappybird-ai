@@ -58,10 +58,9 @@ class FlappyBirdEnvironment(tf_py_environment.py_environment.PyEnvironment):
         if self._flappy_bird_game.get_collided():
             self._episode_ended = True
             print(f"Episode ended, reward: {self._reward}, score: {self._score}, distance: {self._distance}")
-            return ts.termination(observation=observation, reward=-5.0 + self._score)
+            return ts.termination(observation=observation, reward=-5.0)
 
         return ts.transition(observation=observation, reward=self._reward, discount=1.0)
-
 
     def set_observation(self, observation):
         self._observation = observation
