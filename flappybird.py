@@ -53,12 +53,6 @@ class FlappyBird:
         next_pipe = self.pipes[0]
         return next_pipe['height'] - self.bird_y
 
-    def get_distance_to_following_pipe(self):
-        if not self.pipes:
-            return 0
-        next_pipe = self.pipes[1]
-        return next_pipe['x'] - self.bird_x
-
 
     def get_bird_y(self):
         return self.bird_y
