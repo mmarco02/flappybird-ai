@@ -11,7 +11,7 @@ class FlappyBirdEnvironment(gym.Env):
         super(FlappyBirdEnvironment, self).__init__()
         self._flappy_bird_game = FlappyBird()
         self._action_space = spaces.Discrete(2)
-        self._observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)
+        self._observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32)
         self._state = None
         self._reward = 0.0
         self._episode_ended = False
@@ -21,7 +21,8 @@ class FlappyBirdEnvironment(gym.Env):
         self._state = np.full((5,), 0.0, dtype=np.float32)
         self._reward = 0.0
         self._episode_ended = False
-        return self._state, {}
+        self._state = np.array(self._state, dtype=np.float32)
+        return self._state
 
     def step(self, action):
         if self._episode_ended:
@@ -34,7 +35,7 @@ class FlappyBirdEnvironment(gym.Env):
         if action == 1:
             self._flappy_bird_game.jump()
 
-        self._reward = self._flappy_bird_game.score + (self._flappy_bird_game.distance / 100)
+        self._reward = self._flappy_bird_game.score + (self._flappy_bird_game.distance / 200)
 
         if self._flappy_bird_game.game_over:
             self._episode_ended = True

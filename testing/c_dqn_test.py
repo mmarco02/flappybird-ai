@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+
 import matplotlib
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -22,8 +24,9 @@ from tf_env import FlappyBirdEnvironment
 from flappybird import FlappyBird
 import numpy as np
 from tf_agents.policies import policy_saver
+import pygame
 
-num_iterations = 25000
+num_iterations = 1500
 
 initial_collect_steps = 15
 collect_steps_per_iteration = 15
@@ -78,7 +81,9 @@ categorical_q_net = categorical_q_network.CategoricalQNetwork(
 
 optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
 
-train_step_counter = tf.compat.v2.Variable(0)
+#train_step_counter = tf.compat.v2.Variable(0)
+
+global_step = tf.compat.v1.train.get_or_create_global_step()
 
 agent = categorical_dqn_agent.CategoricalDqnAgent(
     train_env.time_step_spec(),
@@ -90,9 +95,10 @@ agent = categorical_dqn_agent.CategoricalDqnAgent(
     n_step_update=n_step_update,
     td_errors_loss_fn=common.element_wise_squared_loss,
     gamma=gamma,
-    train_step_counter=train_step_counter)
+    train_step_counter=global_step)
 
 agent.initialize()
+
 
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
@@ -138,7 +144,6 @@ def collect_step(environment, policy):
 for _ in range(initial_collect_steps):
     collect_step(train_env, random_policy)
 
-
 # This loop is so common in RL, that we provide standard implementations of
 # these. For more details see the drivers module.
 
@@ -160,59 +165,63 @@ agent.train_step_counter.assign(0)
 avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
 
-global_step = tf.compat.v1.train.get_or_create_global_step()
-
 policy_dir = 'saved_policy'
 
-#load the policy
+# load the policy
 #saved_policy = tf.compat.v2.saved_model.load(policy_dir)
-
 
 checkpoint_dir = os.path.join(policy_dir, 'checkpoint')
 train_checkpointer = common.Checkpointer(
     ckpt_dir=checkpoint_dir,
-    max_to_keep=2,
+    max_to_keep=4,
     agent=agent,
     policy=agent.policy,
+    collect_policy=agent.collect_policy,
     replay_buffer=replay_buffer,
     global_step=global_step
 )
 
-train_checkpointer.initialize_or_restore()
-global_step = tf.compat.v1.train.get_global_step()
+if train_checkpointer.checkpoint_exists:
+    train_checkpointer.initialize_or_restore()
+    global_step = tf.compat.v1.train.get_global_step()
+    print(f"Checkpoint restored from {checkpoint_dir}")
+else:
+    print(f"Checkpoint not found in {checkpoint_dir}")
 
-print(f"Checkpoint restored from {checkpoint_dir}")
+try:
+    for _ in range(num_iterations):
+        # Collect a few steps using collect_policy and save to the replay buffer.
+        for _ in range(collect_steps_per_iteration):
+            collect_step(train_env, agent.collect_policy)
 
-print(f"Policy: {agent.policy.variables()}")
+        # Sample a batch of data from the buffer and update the agent's network.
+        experience, unused_info = next(iterator)
+        train_loss = agent.train(experience).loss
 
+        step = agent.train_step_counter.numpy()
 
-for _ in range(num_iterations):
-    # Collect a few steps using collect_policy and save to the replay buffer.
-    for _ in range(collect_steps_per_iteration):
-        collect_step(train_env, agent.collect_policy)
+        if step % log_interval == 0:
+            print('step = {0}: loss = {1}'.format(step, train_loss))
+            train_checkpointer.save(global_step)
+            print(f"Checkpoint saved to {checkpoint_dir}")
 
-    # Sample a batch of data from the buffer and update the agent's network.
-    experience, unused_info = next(iterator)
-    train_loss = agent.train(experience).loss
+        if step % eval_interval == 0:
+            avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
+            print('step = {0}: Average Return = {1:.2f}'.format(step, avg_return))
+            returns.append(avg_return)
 
-    step = agent.train_step_counter.numpy()
+    steps = range(0, num_iterations + 1, eval_interval)
+    plt.plot(steps, returns)
+    plt.ylabel('Average Return')
+    plt.xlabel('Step')
+    plt.show()
 
-    if step % log_interval == 0:
-        print('step = {0}: loss = {1}'.format(step, train_loss))
-        train_checkpointer.save(global_step)
-        print(f"Checkpoint saved to {checkpoint_dir}")
+    train_checkpointer.save(global_step)
+    print(f"Training ended, checkpoint saved to {checkpoint_dir}")
 
-
-    if step % eval_interval == 0:
-        avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
-        print('step = {0}: Average Return = {1:.2f}'.format(step, avg_return))
-        returns.append(avg_return)
-
-steps = range(0, num_iterations + 1, eval_interval)
-plt.plot(steps, returns)
-plt.ylabel('Average Return')
-plt.xlabel('Step')
-plt.ylim(top=550)
-
-
-train_checkpointer.save(global_step)
+except KeyboardInterrupt:
+    print("Interrupted")
+    train_checkpointer.save(global_step)
+    print(f"Checkpoint saved to {checkpoint_dir}")
+    pygame.quit()
+    sys.exit(0)

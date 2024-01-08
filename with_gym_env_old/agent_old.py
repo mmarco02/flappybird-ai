@@ -129,10 +129,6 @@ plt.xlabel("Episode")
 plt.ylabel("Evaluation Reward")
 plt.show()
 
-# Save the Trained DQN
-dqn_agent.save_weights("dqn_flappy_bird.keras")
-
-
 
 
 
