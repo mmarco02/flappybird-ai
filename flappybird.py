@@ -91,7 +91,7 @@ class FlappyBird:
             self.draw()
 
             pygame.display.flip()
-            self.clock.tick(180) #default: 30
+            self.clock.tick() #default: 30
 
     def render(self):
         self.distance += 1
@@ -99,7 +99,7 @@ class FlappyBird:
         self.draw()
 
         pygame.display.flip()
-        self.clock.tick(180) #default: 30
+        self.clock.tick() #default: 30
 
     def jump(self):
         self.bird_velocity = self.jump_strength
