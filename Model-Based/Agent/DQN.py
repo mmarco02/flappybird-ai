@@ -1,16 +1,11 @@
-from keras import Sequential
-from keras.optimizers import Adam
+from keras.models import Sequential
 from keras.layers import Dense
-from collections import deque
 import numpy as np
-from matplotlib import pyplot as plt
-import gym
 import random
+from collections import deque
 import tensorflow as tf
-
-gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
-
-env = gym.make('FlappyBird-m')
+from keras.optimizers import Adam
+import os
 
 class DQN():
     def __init__(self):
@@ -35,13 +30,11 @@ class DQN():
 
         self.model = self.DQNmodel()
         self.target_model = self.DQNmodel()
-        self.update_target_model()  # Initialize target model with same weights
-
-        return
+        self.update_target_model()
 
     def DQNmodel(self):
         model = Sequential()
-        model.add(Dense(32, input_shape=(5,), activation='relu'))
+        model.add(Dense(32, input_shape=(5,), activation='relu'))  # Adjust input shape
         model.add(Dense(32, activation='relu'))
         model.add(Dense(2, activation='softmax'))
         model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
@@ -82,6 +75,8 @@ class DQN():
         next_states = np.array([sample[3] for sample in mini_batch])
         dones = np.array([sample[4] for sample in mini_batch])
 
+        next_states = next_states.reshape(next_states.shape[0], -1)  # Reshape next_states to 2D
+
         model_params = self.model.trainable_variables
         with tf.GradientTape() as tape:
             predicts = self.model(states)
@@ -103,78 +98,32 @@ class DQN():
             self.target_model.save('my_target_model.keras')
             print("Model saved.")
 
-
     def epsilon_decay(self, episode):
         self.epsilon = self.eps_min + (self.eps_max - self.eps_min) * np.exp(-self.eps_decay_rate * episode)
 
     def get_action_space(self):
         return env.action_space.n
 
+    def update(self, state, action, predicted_reward, predicted_next_state):
+        self.replay_memory.append([state, action, predicted_reward, predicted_next_state, False])
+        self.train_model()
+        self.update_target_model()
 
-agent = DQN()
+    def save_model(self, directory="saved"):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        model_path = os.path.join(directory, 'my_model.keras')
+        target_model_path = os.path.join(directory, 'my_target_model.keras')
+        self.model.save(model_path)
+        self.target_model.save(target_model_path)
+        print("Model saved.")
 
-try:
-    agent.model.load_weights("my_model.keras")
-    agent.target_model.load_weights("my_target_model.keras")
-    print("Loaded saved model.")
-except:
-    print("No saved model found. Creating new model.")
-
-try:
-    for episode in range(agent.n_steps):
-        state = env.reset()
-        total_reward = 0
-        done = False
-        steps = 0
-
-        while not done:
-            # Epsilon-greedy policy for action selection
-            q_values = agent.model.predict(state.reshape(1, -1))
-            action = agent.epsilon_greedy(q_values, agent.iteration)
-
-            # Take action and observe the next state and reward
-            next_state, reward, done, _ = env.step(action)
-            total_reward += reward
-
-            # Store transition in replay memory
-            agent.replay_memory.append((state, action, reward, next_state, 1.0 - done))
-            state = next_state
-
-            # Train the model
-            agent.train_model()
-
-            steps += 1
-        if episode % agent.copy_steps == 0:
-            print("Copied model parameters to target network.")
-            agent.update_target_model()
-
-        if episode % agent.save_steps == 0:
-            agent.save_model(episode)
-
-            agent.iteration += 1
-
-            agent.rewards_history.append(total_reward)
-
-        print(f"Episode: {episode}, Total reward: {total_reward}, Epsilon: {agent.epsilon}")
-
-except KeyboardInterrupt:
-    agent.model.save("my_model.keras")
-    agent.target_model.save("my_target_model.keras")
-    print("Training interrupted, model saved.")
-
-agent.model.save("my_model.keras")
-
-# Plot the training progress
-plt.figure(figsize=(8, 4))
-plt.plot(agent.iteration, agent.rewards_history)
-plt.xlabel("Episode", fontsize=14)
-plt.ylabel("Training reward", fontsize=14)
-plt.show()
-
-# plot the agents accuracy
-plt.figure(figsize=(8, 4))
-plt.plot(agent.iteration, agent.epsilon)
-plt.xlabel("Episode", fontsize=14)
-plt.ylabel("Epsilon", fontsize=14)
-plt.show()
-
+    def load_model(self, directory="saved"):
+        model_path = os.path.join(directory, 'my_model.keras')
+        target_model_path = os.path.join(directory, 'my_target_model.keras')
+        if os.path.exists(model_path) and os.path.exists(target_model_path):
+            self.model = tf.keras.models.load_model(model_path)
+            self.target_model = tf.keras.models.load_model(target_model_path)
+            print("Models loaded.")
+        else:
+            print("Saved models not found. Starting from scratch.")

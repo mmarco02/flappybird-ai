@@ -41,7 +41,7 @@ class FlappyBirdEnvironment(gym.Env):
             self._episode_ended = True
             print(f"Episode ended with score {self._flappy_bird_game.score}"
                   f" and distance {self._flappy_bird_game.distance}")
-            return observation, -20, self._episode_ended, {}
+            return observation, -20 + self._reward, self._episode_ended, {}
 
         return observation, self._reward, self._episode_ended, {}
 
