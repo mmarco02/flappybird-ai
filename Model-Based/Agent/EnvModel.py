@@ -6,7 +6,6 @@ import os
 
 class EnvironmentModel:
     def __init__(self, state_size, action_size=1):  # Assuming discrete actions
-        input_shape = state_size + action_size
         self.model = Sequential([
             Input(shape=(6,)),
             Dense(128, activation='relu'),
@@ -18,7 +17,7 @@ class EnvironmentModel:
     def predict(self, state, action):
         action = action.reshape(-1, 1)  # Reshape action to 2D
         input_data = np.concatenate([state, action], axis=-1)
-        prediction = self.model.predict(input_data)
+        prediction = self.model.predict(input_data, verbose=0)
         predicted_next_state = prediction[:, :-1]  # All but the last element
         predicted_reward = prediction[:, -1:]  # Only the last element
         return predicted_next_state, predicted_reward
@@ -38,7 +37,7 @@ class EnvironmentModel:
         # print("Inputs shape:", inputs.shape)
         # print("Outputs shape:", outputs.shape)
 
-        self.model.fit(inputs, outputs, epochs=10)
+        self.model.fit(inputs, outputs, epochs=10, verbose=0)
 
     def save_model(self, directory="saved"):
         if not os.path.exists(directory):

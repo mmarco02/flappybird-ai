@@ -6,6 +6,7 @@ from collections import deque
 import tensorflow as tf
 from keras.optimizers import Adam
 import os
+from Env import env
 
 class DQN():
     def __init__(self):

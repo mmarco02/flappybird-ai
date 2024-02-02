@@ -1,12 +1,8 @@
 import numpy as np
-import gym
 from matplotlib import pyplot as plt
 from DQN import DQN
 from EnvModel import EnvironmentModel
-
-gym.register(id='FlappyBird-m', entry_point='flappy_bird_gym.envs.flappy_bird_env:FlappyBirdEnvironment')
-
-env = gym.make('FlappyBird-m')
+from Env import env
 
 agent = DQN()
 
@@ -30,7 +26,7 @@ try:
         state = env.reset()
         done = False
         while not done:
-            q_values = agent.model.predict(state.reshape(1, -1))
+            q_values = agent.model.predict(state.reshape(1, -1), verbose=0)
             action = np.argmax(q_values[0])
             next_state, reward, done, _ = env.step(action)
 
@@ -43,6 +39,7 @@ try:
             # Update DQN with the predicted outcomes
             agent.update(state, action, predicted_reward, predicted_next_state)
             state = next_state
+
 
             if done:
                 agent.rewards_history.append(reward)
@@ -62,8 +59,8 @@ except KeyboardInterrupt:
 rewards = agent.rewards_history
 episodes = range(len(rewards))
 
-plt.plot(episodes, rewards)
-plt.xlabel('Episode')
-plt.ylabel('Total Reward')
-plt.title('Sample Efficiency: Reward per Episode')
+plt.plot(range(len(agent.rewards_history)), agent.rewards_history)
+plt.xlabel('Step')
+plt.ylabel('Reward')
+plt.title('Reward per Timestep')
 plt.show()

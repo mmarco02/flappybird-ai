@@ -8,8 +8,9 @@ class FlappyBird:
 
         self.screen_width = 600
         self.screen_height = 400
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.HWSURFACE | pygame.DOUBLEBUF)
         pygame.display.set_caption("Flappy Bird Clone")
+
 
         self.clock = pygame.time.Clock()
 
