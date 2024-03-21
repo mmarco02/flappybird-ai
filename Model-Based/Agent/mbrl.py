@@ -7,9 +7,8 @@ from Env import env
 agent = DQN()
 
 state_size = env.observation_space.shape[0]
-action_size = env.action_space.n  # This should be 1 if it's a discrete action space
 
-env_model = EnvironmentModel(state_size, action_size)
+env_model = EnvironmentModel(state_size)
 
 total_episodes = 1000
 
@@ -40,9 +39,9 @@ try:
             agent.update(state, action, predicted_reward, predicted_next_state)
             state = next_state
 
-
             if done:
                 agent.rewards_history.append(reward)
+
                 print(
                     "Episode: {}/{}, reward: {}".format(episode, total_episodes, reward))
                 break
@@ -56,11 +55,34 @@ except KeyboardInterrupt:
     env_model.save_model()
     print("Training stopped. Models saved.")
 
+    rewards = agent.rewards_history
+    losses = agent.loss_history
+    episodes = range(len(rewards))
+
+    plt.plot(range(len(agent.rewards_history)), agent.rewards_history)
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.title('Reward per Episode')
+    plt.show()
+
+    plt.plot(range(len(agent.loss_history)), agent.loss_history)
+    plt.xlabel('Step')
+    plt.ylabel('Loss')
+    plt.title('Loss per Episode')
+    plt.show()
+
 rewards = agent.rewards_history
+losses = agent.loss_history
 episodes = range(len(rewards))
 
 plt.plot(range(len(agent.rewards_history)), agent.rewards_history)
-plt.xlabel('Step')
+plt.xlabel('Episode')
 plt.ylabel('Reward')
-plt.title('Reward per Timestep')
+plt.title('Reward per Episode')
+plt.show()
+
+plt.plot(range(len(agent.loss_history)), agent.loss_history)
+plt.xlabel('Step')
+plt.ylabel('Loss')
+plt.title('Loss per Episode')
 plt.show()

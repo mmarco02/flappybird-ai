@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 
 class EnvironmentModel:
-    def __init__(self, state_size, action_size=1):  # Assuming discrete actions
+    def __init__(self, state_size):
         self.model = Sequential([
             Input(shape=(6,)),
             Dense(128, activation='relu'),

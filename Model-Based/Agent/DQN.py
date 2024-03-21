@@ -28,6 +28,7 @@ class DQN():
         self.iteration = 0  # game iterations
         self.done = True  # env needs to be reset
         self.rewards_history = []
+        self.loss_history = []
 
         self.model = self.DQNmodel()
         self.target_model = self.DQNmodel()
@@ -89,15 +90,11 @@ class DQN():
 
             loss = tf.reduce_mean(tf.square(target_value - predicts))
 
+            self.loss_history.append(loss)
+
         grads = tape.gradient(loss, model_params)
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         self.optimizer.apply_gradients(zip(grads, model_params))
-
-    def save_model(self, episode):
-        if episode % self.save_steps == 0:
-            self.model.save('my_model.keras')
-            self.target_model.save('my_target_model.keras')
-            print("Model saved.")
 
     def epsilon_decay(self, episode):
         self.epsilon = self.eps_min + (self.eps_max - self.eps_min) * np.exp(-self.eps_decay_rate * episode)

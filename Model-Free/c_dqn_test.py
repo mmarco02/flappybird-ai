@@ -26,7 +26,7 @@ import numpy as np
 from tf_agents.policies import policy_saver
 import pygame
 
-num_iterations = 1500
+num_iterations = 5000
 
 initial_collect_steps = 15
 collect_steps_per_iteration = 15
