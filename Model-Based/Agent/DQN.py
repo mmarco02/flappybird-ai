@@ -11,7 +11,7 @@ from Env import env
 class DQN():
     def __init__(self):
         self.discount_factor = 0.99
-        self.learning_rate = 0.001
+        self.learning_rate = 0.01
         self.eps_min = 0.1
         self.eps_max = 1.0
         self.eps_decay_steps = 2000000
@@ -39,7 +39,7 @@ class DQN():
         model.add(Dense(32, input_shape=(5,), activation='relu'))  # Adjust input shape
         model.add(Dense(32, activation='relu'))
         model.add(Dense(2, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.learning_rate))
         return model
 
     def sample_memories(self, batch_size):
@@ -53,7 +53,7 @@ class DQN():
             for col, value in zip(cols, memory):
                 col.append(value)
         cols = [np.array(col) for col in cols]
-        return cols[0], cols[1], cols[2].reshape(-1, 1), cols[3], cols[4].reshape(-1, 1)
+        return cols[0], cols[1], cols[2], cols[3], cols[4]
 
     def epsilon_greedy(self, q_values, step):
         self.epsilon = max(self.eps_min, self.eps_max - (self.eps_max - self.eps_min) * step / self.eps_decay_steps)
@@ -69,13 +69,13 @@ class DQN():
     def train_model(self):
         if len(self.replay_memory) < self.batch_size:
             return
-        mini_batch = random.sample(self.replay_memory, self.batch_size)
+        mini_batch = self.sample_memories(self.batch_size)
 
-        states = np.array([sample[0] for sample in mini_batch])
-        actions = np.array([sample[1] for sample in mini_batch])
-        rewards = np.array([sample[2] for sample in mini_batch])
-        next_states = np.array([sample[3] for sample in mini_batch])
-        dones = np.array([sample[4] for sample in mini_batch])
+        states = np.array(mini_batch[0])
+        actions = np.array(mini_batch[1])
+        rewards = np.array(mini_batch[2])
+        next_states = np.array(mini_batch[3])
+        dones = np.array(mini_batch[4])
 
         next_states = next_states.reshape(next_states.shape[0], -1)  # Reshape next_states to 2D
 
@@ -94,7 +94,7 @@ class DQN():
 
         grads = tape.gradient(loss, model_params)
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-        self.optimizer.apply_gradients(zip(grads, model_params))
+        self.optimizer.apply_gradients(zip(grads, model_params))   
 
     def epsilon_decay(self, episode):
         self.epsilon = self.eps_min + (self.eps_max - self.eps_min) * np.exp(-self.eps_decay_rate * episode)
